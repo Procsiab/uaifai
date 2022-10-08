@@ -43,9 +43,17 @@ Follow the pictures to find the app pairing setting, and enable it if is not che
 4. From the new window that will pop up, check the box at the right of the option "Allow new pairing requests"
 ![Corner menu](./img/iliadbox_it_pairing03.png)
 
-## Set the correct access rights for the token
+## ⚠ Set the correct access rights for the token
 
-TODO
+**NOTE**: at the moment the "developper API" does not expose the `/authorization` endpoint, which you interact with through the web interface. Therefore, the following step is mandatory when running the script for the first time.
+
+1. Follow the steps fem the previous section and open the "Access management" window
+
+2. From there, click the "Applications" tab, then locate the "Uai-Fai" application and click the pencil icon at the right of its row
+![Corner menu](./img/iliadbox_it_token_settings01.png)
+
+3. Select only the access right called "Edit Iliadbox/Freebox settings"
+![Corner menu](./img/iliadbox_it_token_settings02.png)
 
 ## Troubleshooting
 
