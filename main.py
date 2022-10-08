@@ -206,11 +206,23 @@ def main():
         base_ap_name = ssid_request['result'][1]['bss_params']['ssid']
     except Exception:
         print('⛔ Error in reading the default SSID')
-        print('   Message: ' + guest_ap_request['msg'])
+        print('   Message: ' + ssid_request['msg'])
         return 1
     qr_wifi_ap_string = 'WIFI:T:WPA;S:' + base_ap_name + ';P:' + guest_ap_password + ';;'
     printable_qr_string = pyqrcode.create(qr_wifi_ap_string)
     print(printable_qr_string.terminal())
+
+    # Invalidate the session token
+    try:
+        logout_request = requests.post(API_BASE_URL + '/api/' + API_VERSION + '/login/logout/',
+                                       headers=session_auth_header).json()
+        if not logout_request['success']:
+            raise Exception
+        print('✅ Successful session logout')
+    except Exception:
+        print('⛔ Error in logging out')
+        print('   Message: ' + logout_request['msg'])
+        return 1
 
 
 if __name__ == "__main__":
