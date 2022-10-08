@@ -152,7 +152,7 @@ def main():
             update_apptoken(saved_credentials['app_token'])
             update_trackid(saved_credentials['track_id'])
             update_challenge(saved_credentials['challenge'])
-        print('💾 Loaded credentials from file: ' + SAVE_FILE_PATH)
+        print('📂 Loaded credentials from file: ' + SAVE_FILE_PATH)
 
     # Update the challenge value just in case it has rotated
     current_challenge = new_session()
@@ -191,6 +191,8 @@ def main():
                                          json.dumps(guest_ap_request_data),
                                          headers=session_auth_header).json()
         if not guest_ap_request['success']:
+            if guest_ap_request['error_code'] == 'insufficient_rights':
+                print('🔧 You should check from the router\'s settings that your token has the "edit settings" permission')
             raise Exception
         print('✅ Created guest AP: ' + guest_ap_name)
         print('   Password: ' + guest_ap_password)
