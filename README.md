@@ -9,7 +9,7 @@ A dirty but simple Python script to automagically create a guest password on an 
 
 By default, the generated guest key will expire after one day; also, the description and the key itself are randomly generated.
 
-## Installing
+## Installing and running
 
 You can set up a Python virtualenv and use this script inside it through the following commands (in `Bash`):
 
@@ -18,6 +18,12 @@ python3 -m venv .venv
 source .venv/bin/activate
 python main.py
 ```
+
+### Arguments
+
+At the moment the script will accept the following arguments from the CLI:
+
+- `-noqr`: will not print the QR-code to the terminal
 
 ## Enable the app pairing setting
 

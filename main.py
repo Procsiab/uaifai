@@ -4,6 +4,8 @@ import json
 import requests
 import os
 import platform
+import time
+import sys
 
 from binascii import hexlify
 import hmac
@@ -94,6 +96,13 @@ def create_random_key() -> str:
     return key
 
 
+def should_print_qr() -> bool:
+    if '-noqr' in sys.argv:
+        return False
+    else:
+        return True
+
+
 def main():
     global ROUTER_IP
     global API_BASE_URL
@@ -105,7 +114,7 @@ def main():
     global SAVE_FILE_PATH
     global AUTHORIZATION_SINGLETON
 
-    print('Test the API connection to the router...')
+    print('   Test the API connection to the router')
     try:
         api_test_response = requests.get(API_BASE_URL + '/api_version').json()
         API_VERSION = 'v' + api_test_response['api_version'].split('.')[0]
@@ -193,7 +202,15 @@ def main():
         if not guest_ap_request['success']:
             if guest_ap_request['error_code'] == 'insufficient_rights':
                 print('🔧 You should check from the router\'s settings that your token has the "edit settings" permission')
-            raise Exception
+                while guest_ap_request['error_code'] == 'insufficient_rights':
+                    time.sleep(1)
+                    guest_ap_request = requests.post(API_BASE_URL + '/api/' + API_VERSION + '/wifi/custom_key/',
+                                                     json.dumps(guest_ap_request_data),
+                                                     headers=session_auth_header).json()
+                print('🔧 ✅ The token is now correctly authorized. Run the script again, please')
+                return 0
+            else:
+                raise Exception
         print('✅ Created guest AP: ' + guest_ap_name)
         print('   Password: ' + guest_ap_password)
     except Exception:
@@ -202,17 +219,18 @@ def main():
         return 1
 
     # Print the QR code for connecting
-    try:
-        ssid_request = requests.get(API_BASE_URL + '/api/' + API_VERSION + '/wifi/bss/',
-                                         headers=session_auth_header).json()
-        base_ap_name = ssid_request['result'][1]['bss_params']['ssid']
-    except Exception:
-        print('⛔ Error in reading the default SSID')
-        print('   Message: ' + ssid_request['msg'])
-        return 1
-    qr_wifi_ap_string = 'WIFI:T:WPA;S:' + base_ap_name + ';P:' + guest_ap_password + ';;'
-    printable_qr_string = pyqrcode.create(qr_wifi_ap_string)
-    print(printable_qr_string.terminal())
+    if should_print_qr():
+        try:
+            ssid_request = requests.get(API_BASE_URL + '/api/' + API_VERSION + '/wifi/bss/',
+                                             headers=session_auth_header).json()
+            base_ap_name = ssid_request['result'][1]['bss_params']['ssid']
+        except Exception:
+            print('⛔ Error in reading the default SSID')
+            print('   Message: ' + ssid_request['msg'])
+            return 1
+        qr_wifi_ap_string = 'WIFI:T:WPA;S:' + base_ap_name + ';P:' + guest_ap_password + ';;'
+        printable_qr_string = pyqrcode.create(qr_wifi_ap_string)
+        print(printable_qr_string.terminal())
 
     # Invalidate the session token
     try:
