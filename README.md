@@ -16,6 +16,8 @@ You can set up a Python virtualenv and use this script inside it through the fol
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
 python main.py
 ```
 
