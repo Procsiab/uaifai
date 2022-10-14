@@ -103,6 +103,49 @@ def should_print_qr() -> bool:
         return True
 
 
+def get_apname_arg() -> str:
+    try:
+        if '-apname' in sys.argv:
+            return str(sys.argv[sys.argv.index('-apname') + 1])
+        else:
+            return None
+    except Exception:
+        print('⛔ Error in reading the AP name argument')
+        return None
+
+
+def get_duration_arg() -> int:
+    try:
+        if '-duration' in sys.argv:
+            return int(sys.argv[sys.argv.index('-duration') + 1])
+        else:
+            return -1
+    except Exception:
+        print('⛔ Error in reading the duration in seconds argument')
+        return -1
+
+
+def get_numusers_arg() -> int:
+    try:
+        if '-numusers' in sys.argv:
+            return int(sys.argv[sys.argv.index('-numusers') + 1])
+        else:
+            return -1
+    except Exception:
+        print('⛔ Error in reading the users number argument')
+        return -1
+
+
+def print_help() -> None:
+    if '-help' in sys.argv:
+        print('🔎 Usage: python main.py [-help] [-noqr] [-apname <custom_name>] [-duration <seconds>] [-numusers <number>]')
+        print('   -noqr: will not print the QR-code to the terminal')
+        print('   -apname <custom_name>: set the name of the guest password to custom_name')
+        print('   -duration <seconds>: set the number of seconds before expiring the guest key')
+        print('   -numusers <number>: set the number of concurrent users allowed to share the same guest key')
+        exit(0)
+
+
 def main():
     global ROUTER_IP
     global API_BASE_URL
@@ -114,6 +157,10 @@ def main():
     global SAVE_FILE_PATH
     global AUTHORIZATION_SINGLETON
 
+    # If requested with an argument, print help and exit
+    print_help()
+
+    # Test the API and authorize this application
     print('   Test the API connection to the router')
     try:
         api_test_response = requests.get(API_BASE_URL + '/api_version').json()
@@ -142,7 +189,7 @@ def main():
             print('✅ Authorization successful!')
         except Exception:
             print('⛔ Error in authorizing this application')
-            print('   Message' + app_auth_status['msg'])
+            print('   Message: ' + app_auth_status['msg'])
             return 1
 
         update_apptoken(app_auth_challenge['result']['app_token'])
@@ -185,13 +232,24 @@ def main():
         return 1
 
     # Run the code to create a guest AP / custom key
-    guest_ap_name = create_random_apname()
+    if get_apname_arg() is not None:
+        guest_ap_name = get_apname_arg()
+    else:
+        guest_ap_name = create_random_apname()
+    if get_duration_arg() >= 0:
+        guest_ap_duration = get_duration_arg()
+    else:
+        guest_ap_duration = 86400
+    if get_numusers_arg() >= 0:
+        guest_ap_users = get_numusers_arg()
+    else:
+        guest_ap_users = 1
     guest_ap_password = create_random_key()
     guest_ap_request_data = {
         'description':   guest_ap_name,
         'key':           guest_ap_password,
-        'max_use_count': '2',
-        'duration':      86400,
+        'max_use_count': str(guest_ap_users),
+        'duration':      guest_ap_duration,
         'access_type':   'net_only',
     }
     session_auth_header = {'X-Fbx-App-Auth': session_token}
@@ -222,7 +280,7 @@ def main():
     if should_print_qr():
         try:
             ssid_request = requests.get(API_BASE_URL + '/api/' + API_VERSION + '/wifi/bss/',
-                                             headers=session_auth_header).json()
+                                        headers=session_auth_header).json()
             base_ap_name = ssid_request['result'][1]['bss_params']['ssid']
         except Exception:
             print('⛔ Error in reading the default SSID')

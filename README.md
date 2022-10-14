@@ -25,7 +25,11 @@ python main.py
 
 At the moment the script will accept the following arguments from the CLI:
 
-- `-noqr`: will not print the QR-code to the terminal
+- `-help`: print an help message with these arguments' syntax, then exit the program
+- `-noqr`: will not print the QR-code to the terminal *(default: will print QR if not passed)*
+- `-apname <custom_name>`: set the name of the guest password to custom\_name *(default: randomly generated name_adjective string)*
+- `-duration <seconds>`: set the number of seconds (as integer) before expiring the guest key *(default: one day)*
+- `-numusers <number>`: set the number of concurrent users (as integer) allowed to share the same guest key *(default: 1)*
 
 ## Enable the app pairing setting
 
@@ -47,9 +51,9 @@ Follow the pictures to find the app pairing setting, and enable it if is not che
 
 ## ⚠ Set the correct access rights for the token
 
-**NOTE**: at the moment the "developper API" does not expose the `/authorization` endpoint, which you interact with through the web interface. Therefore, the following step is mandatory when running the script for the first time.
+**NOTE**: at the moment the "developper™ API" does not expose the `/authorization` endpoint, which you interact with through the web interface. Therefore, the following step is mandatory when running the script for the first time.
 
-1. Follow the steps fem the previous section and open the "Access management" window
+1. Follow the steps from the previous section and open the "Access management" window
 
 2. From there, click the "Applications" tab, then locate the "Uai-Fai" application and click the pencil icon at the right of its row
 ![Corner menu](./img/iliadbox_it_token_settings01.png)
