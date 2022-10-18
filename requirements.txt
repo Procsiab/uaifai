@@ -1,3 +1,3 @@
-requests
+freebox-api
 wonderwords
 pyqrcode

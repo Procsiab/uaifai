@@ -1,10 +1,11 @@
 # Uai-Fai
 
-A dirty but simple Python script to automagically create a guest password on an Iliadbox/Freebox router:
+A (less than before, thanks [hacf-fr](https://github.com/hacf-fr)) dirty but simple Python script to automagically create a guest password on an Iliadbox/Freebox router:
 
 - depends on Python3 and the modules inside the `requirements.txt` file
 - automatically registers an app token through the router's API
-- uses plain HTTP for API requests
+- implement the functionality through [freebox-api](https://github.com/hacf-fr/freebox-api)
+- uses HTTPS for API requests, works for both French and Italian versions
 - prints the guest AP credentials as a QR-code inside the terminal
 
 By default, the generated guest key will expire after one day; also, the description and the key itself are randomly generated.
@@ -18,8 +19,14 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -U pip
 pip install -r requirements.txt
+cp freebox_certificates.pem $(find .venv -name 'freebox_certificates.pem')
 python main.py
 ```
+
+You can also just run the `init_env.sh` script with Bash: it will delete the pre-existing `.venv` folder and download again the dependencies and install the certificate.
+
+**IMPORTANT**: If you are using an Italian Iliadbox, you MUST copy the provided `PEM` cerftificate file inside the virtualenv packages directory, as shown above. If you are using a French Freebox, you must change the `ROUTER_NAME` variable inside the `main.py` file (de-comment the right one, delete the other).
+
 
 ### Arguments
 
@@ -63,6 +70,4 @@ Follow the pictures to find the app pairing setting, and enable it if is not che
 
 ## Troubleshooting
 
-To generate a new app token, delete the file `uaifai_authz.json` that the script will create after it's first run
-
-The script will read from that file only the strings `app_token` and `track_id`, while it will obtain at runtime the `challenge` string.
+To generate a new app token, delete the file `uaifai_authz.json` that the script will create after it's first run.

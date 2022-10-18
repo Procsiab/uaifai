@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 
-import json
-import requests
+import asyncio
+from freebox_api import Freepybox, exceptions as fbx_except
+
 import os
 import platform
 import time
 import sys
-
-from binascii import hexlify
-import hmac
-import hashlib
 
 from wonderwords import RandomWord
 import string
@@ -17,20 +14,13 @@ import random
 import pyqrcode
 
 
-ROUTER_IP = '192.168.1.254'
-API_BASE_URL = 'http://' + ROUTER_IP
-API_VERSION = 'v0'
-LOCAL_HOSTNAME = 'local'
+ROUTER_HOSTNAME = 'myiliadbox.iliad.it'  # for Italian Iliadbox
+# ROUTER_HOSTNAME = 'mafreebox.freebox.fr'  # for French Freebox
+API_VERSION = 'v8'
 APP_ID = 'net.procsiab.uaifai'
 APP_NAME = 'Uai-Fai'
 APP_VERSION = '0.0.1'
 SAVE_FILE_PATH = 'uaifai_authz.json'
-
-AUTHORIZATION_SINGLETON = {
-    'app_token': '',
-    'track_id': '',
-    'challenge': '',
-}
 
 
 def get_hostname() -> str:
@@ -40,52 +30,10 @@ def get_hostname() -> str:
         return(os.uname()[1])
 
 
-def new_challenge(track_id: str) -> dict:
-    _api_uri = API_BASE_URL + '/api/' + API_VERSION + '/login/authorize/' + track_id
-    return requests.get(_api_uri).json()
-
-
-def new_session() -> dict:
-    _api_uri = API_BASE_URL + '/api/' + API_VERSION + '/login/'
-    return requests.get(_api_uri).json()
-
-
-def update_challenge(new_challenge: str) -> None:
-    AUTHORIZATION_SINGLETON['challenge'] = new_challenge
-
-
-def update_trackid(new_trackid: str) -> None:
-    AUTHORIZATION_SINGLETON['track_id'] = new_trackid
-
-
-def update_apptoken(new_apptoken: str) -> None:
-    AUTHORIZATION_SINGLETON['app_token'] = new_apptoken
-
-
-def get_challenge() -> str:
-    return AUTHORIZATION_SINGLETON['challenge']
-
-
-def get_trackid() -> str:
-    return AUTHORIZATION_SINGLETON['track_id']
-
-
-def get_apptoken() -> str:
-    return AUTHORIZATION_SINGLETON['app_token']
-
-
-def create_session_password(app_token: str, challenge: str) -> str:
-    digester = hmac.new(bytes(app_token, 'UTF-8'),
-                        bytes(challenge, 'UTF-8'), hashlib.sha1)
-    signature_digest = digester.digest()
-    signature_encode = hexlify(signature_digest).decode('ascii')
-    return signature_encode
-
-
 def create_random_apname() -> str:
     randword = RandomWord()
-    name = 'guest-' + randword.word(include_parts_of_speech=['nouns'], word_min_length=5, word_max_length=10) \
-                    + '_' + randword.word(include_parts_of_speech=['adjectives'], word_min_length=5, word_max_length=10)
+    name = randword.word(include_parts_of_speech=['nouns'], word_min_length=5, word_max_length=10) \
+        + '_' + randword.word(include_parts_of_speech=['adjectives'], word_min_length=5, word_max_length=10)
     return name
 
 
@@ -146,92 +94,39 @@ def print_help() -> None:
         exit(0)
 
 
-def main():
-    global ROUTER_IP
-    global API_BASE_URL
+async def main():
     global API_VERSION
-    global LOCAL_HOSTNAME
     global APP_ID
     global APP_NAME
     global APP_VERSION
     global SAVE_FILE_PATH
-    global AUTHORIZATION_SINGLETON
 
     # If requested with an argument, print help and exit
     print_help()
 
+    # Prepare the connector instance
+    app_meta_dict = {
+        'app_id': APP_ID,
+        'app_name': APP_NAME,
+        'app_version': APP_VERSION,
+        'device_name': get_hostname(),
+    }
+    fbx = Freepybox(app_desc=app_meta_dict, token_file=SAVE_FILE_PATH, api_version='v8')
+
     # Test the API and authorize this application
     print('   Test the API connection to the router')
-    try:
-        api_test_response = requests.get(API_BASE_URL + '/api_version').json()
-        API_VERSION = 'v' + api_test_response['api_version'].split('.')[0]
-        print('✅ Iliadbox API version: ' + API_VERSION)
-    except Exception:
-        print('⛔ Unable to connect to the router at: ' + ROUTER_IP)
-        return 1
-
     if not os.path.exists(SAVE_FILE_PATH):
-        app_auth_token_data = {
-            'app_id':      APP_ID,
-            'app_name':    APP_NAME,
-            'app_version': APP_VERSION,
-            'device_name': get_hostname(),
-        }
-        try:
-            app_auth_challenge = requests.post(API_BASE_URL + '/api/' + API_VERSION + '/login/authorize/',
-                                               json.dumps(app_auth_token_data)).json()
-            print('👆 Click the right arrow on the Iliadbox to authorize...')
-
-            app_auth_track_id = str(app_auth_challenge['result']['track_id'])
-            app_auth_status = new_challenge(app_auth_track_id)
-            while app_auth_status['result']['status'] == 'pending':
-                app_auth_status = new_challenge(app_auth_track_id)
-            print('✅ Authorization successful!')
-        except Exception:
-            print('⛔ Error in authorizing this application')
-            print('   Message: ' + app_auth_status['msg'])
-            return 1
-
-        update_apptoken(app_auth_challenge['result']['app_token'])
-        update_trackid(app_auth_track_id)
-        update_challenge(app_auth_status['result']['challenge'])
-        try:
-            with open(SAVE_FILE_PATH, 'w') as savefile:
-                json.dump(AUTHORIZATION_SINGLETON, savefile)
-            print('💾 Saved credentials to file: ' + SAVE_FILE_PATH)
-        except Exception:
-            print('⛔ Error in saving credentials to file: ' + SAVE_FILE_PATH)
-            return 1
-    else:
-        with open(SAVE_FILE_PATH, 'r') as savefile:
-            saved_credentials = json.load(savefile)
-            update_apptoken(saved_credentials['app_token'])
-            update_trackid(saved_credentials['track_id'])
-            update_challenge(saved_credentials['challenge'])
-        print('📂 Loaded credentials from file: ' + SAVE_FILE_PATH)
-
-    # Update the challenge value just in case it has rotated
-    current_challenge = new_session()
-    update_challenge(current_challenge['result']['challenge'])
-    session_password = create_session_password(get_apptoken(), get_challenge())
-    app_id_password_data = {
-        'app_id': APP_ID,
-        'app_version': APP_VERSION,
-        'password': session_password,
-    }
+        print('👆 Click the right arrow on the router to authorize...')
     try:
-        session_open_request = requests.post(API_BASE_URL + '/api/' + API_VERSION + '/login/session/',
-                                             json.dumps(app_id_password_data)).json()
-        if not session_open_request['success']:
-            raise Exception
-        session_token = session_open_request['result']['session_token']
-        print('✅ Opened app session: ' + APP_ID)
-    except Exception:
-        print('⛔ Error in opening session')
-        print('   Message: ' + session_open_request['msg'])
+        await fbx.open(host=ROUTER_HOSTNAME, port=443)
+        print('✅ Iliadbox API version: ' + fbx.api_version)
+    except Exception as e:
+        print('⛔ Unable to connect to the router')
+        print('   Message: ' + e)
+        await fbx.close()
         return 1
 
-    # Run the code to create a guest AP / custom key
+    # Run the code to create a guest custom key
     if get_apname_arg() is not None:
         guest_ap_name = get_apname_arg()
     else:
@@ -252,36 +147,25 @@ def main():
         'duration':      guest_ap_duration,
         'access_type':   'net_only',
     }
-    session_auth_header = {'X-Fbx-App-Auth': session_token}
     try:
-        guest_ap_request = requests.post(API_BASE_URL + '/api/' + API_VERSION + '/wifi/custom_key/',
-                                         json.dumps(guest_ap_request_data),
-                                         headers=session_auth_header).json()
-        if not guest_ap_request['success']:
-            if guest_ap_request['error_code'] == 'insufficient_rights':
-                print('🔧 You should check from the router\'s settings that your token has the "edit settings" permission')
-                while guest_ap_request['error_code'] == 'insufficient_rights':
-                    time.sleep(1)
-                    guest_ap_request = requests.post(API_BASE_URL + '/api/' + API_VERSION + '/wifi/custom_key/',
-                                                     json.dumps(guest_ap_request_data),
-                                                     headers=session_auth_header).json()
-                print('🔧 ✅ The token is now correctly authorized. Run the script again, please')
-                return 0
-            else:
-                raise Exception
+        await fbx.wifi.create_wifi_custom_key(guest_ap_request_data)
         print('✅ Created guest AP: ' + guest_ap_name)
         print('   Password: ' + guest_ap_password)
-    except Exception:
+    except fbx_except.InsufficientPermissionsError:
+        print('🔧 You should check from the router\'s settings that your token has the "edit settings" permission')
+        await fbx.close()
+        return 0
+    except Exception as e:
         print('⛔ Error in creating guest AP')
-        print('   Message: ' + guest_ap_request['msg'])
+        print('   Message: ' + e)
+        await fbx.close()
         return 1
 
     # Print the QR code for connecting
     if should_print_qr():
         try:
-            ssid_request = requests.get(API_BASE_URL + '/api/' + API_VERSION + '/wifi/bss/',
-                                        headers=session_auth_header).json()
-            base_ap_name = ssid_request['result'][1]['bss_params']['ssid']
+            ssid_request = await fbx.wifi.get_bss()
+            base_ap_name = ssid_request[0]['bss_params']['ssid']
         except Exception:
             print('⛔ Error in reading the default SSID')
             print('   Message: ' + ssid_request['msg'])
@@ -292,16 +176,18 @@ def main():
 
     # Invalidate the session token
     try:
-        logout_request = requests.post(API_BASE_URL + '/api/' + API_VERSION + '/login/logout/',
-                                       headers=session_auth_header).json()
-        if not logout_request['success']:
-            raise Exception
+        await fbx.close()
         print('✅ Successful session logout')
-    except Exception:
+    except Exception as e:
         print('⛔ Error in logging out')
-        print('   Message: ' + logout_request['msg'])
+        print('   Message: ' + ssid_request['msg'])
         return 1
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass
