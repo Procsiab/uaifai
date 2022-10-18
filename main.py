@@ -155,6 +155,9 @@ async def main():
         print('🔧 You should check from the router\'s settings that your token has the "edit settings" permission')
         await fbx.close()
         return 0
+    except fbx_except.AuthorizationError:
+        print('🔧 The saved token appears to be revoked: you may want to delete the "uaifai_authz.json" and authorize a new token')
+        return 1
     except Exception as e:
         print('⛔ Error in creating guest AP')
         print('   Message: ' + e)
