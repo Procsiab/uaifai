@@ -5,7 +5,6 @@ from freebox_api import Freepybox, exceptions as fbx_except
 
 import os
 import platform
-import time
 import sys
 
 from wonderwords import RandomWord
@@ -16,7 +15,7 @@ import pyqrcode
 
 ROUTER_HOSTNAME = 'myiliadbox.iliad.it'  # for Italian Iliadbox
 # ROUTER_HOSTNAME = 'mafreebox.freebox.fr'  # for French Freebox
-API_VERSION = 'v8'
+API_VERSION = 'v10'
 APP_ID = 'net.procsiab.uaifai'
 APP_NAME = 'Uai-Fai'
 APP_VERSION = '0.0.1'
@@ -25,9 +24,9 @@ SAVE_FILE_PATH = 'uaifai_authz.json'
 
 def get_hostname() -> str:
     if platform.system() == "Windows":
-        return(platform.uname().node)
+        return platform.uname().node
     else:
-        return(os.uname()[1])
+        return os.uname()[1]
 
 
 def create_random_apname() -> str:
@@ -111,7 +110,7 @@ async def main():
         'app_version': APP_VERSION,
         'device_name': get_hostname(),
     }
-    fbx = Freepybox(app_desc=app_meta_dict, token_file=SAVE_FILE_PATH, api_version='v8')
+    fbx = Freepybox(app_desc=app_meta_dict, token_file=SAVE_FILE_PATH, api_version=API_VERSION)
 
     # Test the API and authorize this application
     print('   Test the API connection to the router')
@@ -181,7 +180,7 @@ async def main():
     try:
         await fbx.close()
         print('✅ Successful session logout')
-    except Exception as e:
+    except Exception:
         print('⛔ Error in logging out')
         print('   Message: ' + ssid_request['msg'])
         return 1
