@@ -159,7 +159,7 @@ async def main():
         return 1
     except Exception as e:
         print('⛔ Error in creating guest AP')
-        print('   Message: ' + e)
+        print('   Message: ' + str(e))
         await fbx.close()
         return 1
 
