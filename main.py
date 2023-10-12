@@ -50,6 +50,13 @@ def should_print_qr() -> bool:
         return True
 
 
+def is_qr_text() -> bool:
+    if '-textqr' in sys.argv:
+        return True
+    else:
+        return False
+
+
 def get_apname_arg() -> str:
     try:
         if '-apname' in sys.argv:
@@ -87,6 +94,7 @@ def print_help() -> None:
     if '-help' in sys.argv:
         print('🔎 Usage: python main.py [-help] [-noqr] [-apname <custom_name>] [-duration <seconds>] [-numusers <number>]')
         print('   -noqr: will not print the QR-code to the terminal')
+        print('   -textqr: will print the QR-code to the terminal, otherwise show a PNG image')
         print('   -apname <custom_name>: set the name of the guest password to custom_name')
         print('   -duration <seconds>: set the number of seconds before expiring the guest key')
         print('   -numusers <number>: set the number of concurrent users allowed to share the same guest key')
@@ -174,7 +182,11 @@ async def main():
             return 1
         qr_wifi_ap_string = 'WIFI:T:WPA;S:' + base_ap_name + ';P:' + guest_ap_password + ';;'
         printable_qr_string = pyqrcode.create(qr_wifi_ap_string)
-        print(printable_qr_string.terminal())
+        if is_qr_text():
+            print(printable_qr_string.terminal())
+        else:
+            printable_qr_string.png(guest_ap_name + '.png', scale=6, module_color=[0, 0, 0, 128], background=[0xff, 0xff, 0xcc])
+            printable_qr_string.show()
 
     # Invalidate the session token
     try:

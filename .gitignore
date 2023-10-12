@@ -1,3 +1,5 @@
 uaifai_authz.json
 *.swp
 .venv
+*.bak_*
+*.png

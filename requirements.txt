@@ -1,3 +1,4 @@
-freebox-api
-wonderwords
-pyqrcode
+freebox-api==1.1.0
+wonderwords==2.2.0
+pyqrcode==1.2.1
+pypng==0.20220715.0
