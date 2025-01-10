@@ -45,15 +45,19 @@ At the moment the script will accept the following arguments from the CLI:
 Follow the pictures to find the app pairing setting, and enable it if is not checked:
 
 1. Click on the bottom left menu, hover the mouse cursor over the "Settings" item, then click on "Iliadbox parameters"
+
 ![Corner menu](./img/iliadbox_it_pairing01.png)
 
 2. In case you see the simplified view: click on the "Access management" item
+
 ![Corner menu](./img/iliadbox_it_pairing02.png)
 
 3. In case you see the advanced view, scroll down and double-click on the "Access management" button
+
 ![Corner menu](./img/iliadbox_it_pairing02b.png)
 
 4. From the new window that will pop up, check the box at the right of the option "Allow new pairing requests"
+
 ![Corner menu](./img/iliadbox_it_pairing03.png)
 
 ## ⚠ Set the correct access rights for the token
@@ -63,9 +67,11 @@ Follow the pictures to find the app pairing setting, and enable it if is not che
 1. Follow the steps from the previous section and open the "Access management" window
 
 2. From there, click the "Applications" tab, then locate the "Uai-Fai" application and click the pencil icon at the right of its row
+
 ![Corner menu](./img/iliadbox_it_token_settings01.png)
 
 3. Select only the access right called "Edit Iliadbox/Freebox settings"
+
 ![Corner menu](./img/iliadbox_it_token_settings02.png)
 
 ## Troubleshooting
