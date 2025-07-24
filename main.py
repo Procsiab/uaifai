@@ -64,7 +64,17 @@ def get_apname_arg() -> str:
         else:
             return None
     except Exception:
-        print('⛔ Error in reading the AP name argument')
+        print('⛔ Error in reading the AP description argument')
+        return None
+
+def get_apkey_arg() -> str:
+    try:
+        if '-apkey' in sys.argv:
+            return str(sys.argv[sys.argv.index('-apkey') + 1])
+        else:
+            return None
+    except Exception:
+        print('⛔ Error in reading the AP password argument')
         return None
 
 
@@ -92,10 +102,11 @@ def get_numusers_arg() -> int:
 
 def print_help() -> None:
     if '-help' in sys.argv:
-        print('🔎 Usage: python main.py [-help] [-noqr] [-apname <custom_name>] [-duration <seconds>] [-numusers <number>]')
+        print('🔎 Usage: python main.py [-help] [-noqr] [-apname <custom_name>] [-apkey <password>] [-duration <seconds>] [-numusers <number>]')
         print('   -noqr: will not print the QR-code to the terminal')
         print('   -textqr: will print the QR-code to the terminal, otherwise show a PNG image')
-        print('   -apname <custom_name>: set the name of the guest password to custom_name')
+        print('   -apname <custom_name>: set the description of the access point to custom_name')
+        print('   -apkey <password>: set the password of the access point')
         print('   -duration <seconds>: set the number of seconds before expiring the guest key')
         print('   -numusers <number>: set the number of concurrent users allowed to share the same guest key')
         exit(0)
@@ -138,6 +149,10 @@ async def main():
         guest_ap_name = get_apname_arg()
     else:
         guest_ap_name = create_random_apname()
+    if get_apkey_arg() is not None:
+        guest_ap_password = get_apkey_arg()
+    else:
+        guest_ap_password = create_random_key()
     if get_duration_arg() >= 0:
         guest_ap_duration = get_duration_arg()
     else:
@@ -146,7 +161,6 @@ async def main():
         guest_ap_users = get_numusers_arg()
     else:
         guest_ap_users = 1
-    guest_ap_password = create_random_key()
     guest_ap_request_data = {
         'description':   guest_ap_name,
         'key':           guest_ap_password,

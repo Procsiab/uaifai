@@ -34,7 +34,8 @@ At the moment the script will accept the following arguments from the CLI:
 
 - `-help`: print an help message with these arguments' syntax, then exit the program
 - `-noqr`: will not print the QR-code to the terminal *(default: will print QR if not passed)*
-- `-apname <custom_name>`: set the name of the guest password to custom\_name *(default: randomly generated name_adjective string)*
+- `-apname <custom_name>`: set the description of the access point to custom\_name *(default: randomly generated name_adjective string)*
+- `-apkey <password>`: set the password of the access point *(default: randomly generated)*
 - `-duration <seconds>`: set the number of seconds (as integer) before expiring the guest key *(default: one day)*
 - `-numusers <number>`: set the number of concurrent users (as integer) allowed to share the same guest key *(default: 1)*
 
