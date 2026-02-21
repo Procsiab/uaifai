@@ -33,7 +33,8 @@ You can also just run the `init_env.sh` script with Bash: it will delete the pre
 At the moment the script will accept the following arguments from the CLI:
 
 - `-help`: print an help message with these arguments' syntax, then exit the program
-- `-noqr`: will not print the QR-code to the terminal *(default: will print QR if not passed)*
+- `-noqr`: will not print the QR-code *(default: will generate the QR as a PNG file if not passed)*
+- `-textqr`: will print the QR-code to the terminal *(default: will generate the QR as a PNG file if not passed)*
 - `-apname <custom_name>`: set the description of the access point to custom\_name *(default: randomly generated name_adjective string)*
 - `-apkey <password>`: set the password of the access point *(default: randomly generated)*
 - `-duration <seconds>`: set the number of seconds (as integer) before expiring the guest key *(default: one day)*

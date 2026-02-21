@@ -103,8 +103,8 @@ def get_numusers_arg() -> int:
 def print_help() -> None:
     if '-help' in sys.argv:
         print('🔎 Usage: python main.py [-help] [-noqr] [-apname <custom_name>] [-apkey <password>] [-duration <seconds>] [-numusers <number>]')
-        print('   -noqr: will not print the QR-code to the terminal')
-        print('   -textqr: will print the QR-code to the terminal, otherwise show a PNG image')
+        print('   -noqr: will not print or generate the QR-code')
+        print('   -textqr: will print the QR-code to the terminal, otherwise generate and show a PNG image')
         print('   -apname <custom_name>: set the description of the access point to custom_name')
         print('   -apkey <password>: set the password of the access point')
         print('   -duration <seconds>: set the number of seconds before expiring the guest key')
